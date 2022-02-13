@@ -31,6 +31,8 @@ namespace SFM
 
         void SpinOnce();
 
+        void ShowResult();
+
         void Initialize();
 
         void DrawFrame(Frame::Ptr frame, const float *color);

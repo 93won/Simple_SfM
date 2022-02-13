@@ -157,11 +157,36 @@ namespace SFM
 
         DrawFrame(current_frame_, green);
         //FollowCurrentFrame(vis_camera);
-        cv::imshow("image", current_frame_->rgb_);
-        cv::waitKey(1);
+        // cv::imshow("image", current_frame_->rgb_);
+        // cv::waitKey(1);
 
         DrawMapPoints();
 
+        pangolin::FinishFrame();
+    }
+
+    void Viewer::ShowResult()
+    {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        vis_display.Activate(vis_camera);
+
+        const float green[3] = {0.0, 1.0, 0.0};
+        std::unique_lock<std::mutex> lock(viewer_data_mutex_);
+
+
+        const float red[3] = {1.0, 0, 0};
+
+        for (auto &kf : map_->keyframes_)
+        {
+            DrawFrame(kf.second, red);
+        }
+
+        DrawFrame(current_frame_, green);
+        //FollowCurrentFrame(vis_camera);
+        // cv::imshow("image", current_frame_->rgb_);
+
+        DrawMapPoints();
         pangolin::FinishFrame();
     }
 

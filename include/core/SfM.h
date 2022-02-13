@@ -51,6 +51,7 @@ namespace SFM
         bool BuildMap();
         bool InsertKeyFrame();
         void SetObservationsForKeyFrame();
+        bool Optimize();
 
         int DetectFeatures();
         int MatchTwoFrames(Frame::Ptr frame_dst,
@@ -69,16 +70,18 @@ namespace SFM
 
         // params
         int num_features_ = 200;
+        int match_threshold_ = 50;
 
         // utilities
         cv::Ptr<cv::FeatureDetector> detector_;       // feature detector in opencv
         cv::Ptr<cv::DescriptorExtractor> descriptor_; // feature descriptor extractor in opencv
-        cv::FlannBasedMatcher matcher_;
+        cv::Ptr<cv::DescriptorMatcher> matcher_SIFT; 
+        cv::FlannBasedMatcher matcher_ORB;
         double knn_ratio_ = 0.7;
 
         std::vector<Frame::Ptr> frames_;
 
-        std::string match_save_dir;
+        std::string match_save_dir_;
     };
 
 }

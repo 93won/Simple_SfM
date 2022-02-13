@@ -13,14 +13,9 @@ height: 1990
 width: 1492
 
 # feature
-feature_type: ORB
+feature_type: SIFT
 num_features: 2000
-num_features_init: 2000
 knn_ratio: 0.7
 
-# tracking
-#match_threshold_tracking: 30
-# keyframe
-#match_threshold_keyframe: 500
-
+match_threshold: 20
 max: 33

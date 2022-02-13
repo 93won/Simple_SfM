@@ -23,7 +23,6 @@ int main(int argc, char **argv)
 
     SfM::Ptr sfm = SfM::Ptr(new SfM);
     Map::Ptr map = Map::Ptr(new Map);
-    
 
     double fx = Config::Get<double>("camera.fx");
     double fy = Config::Get<double>("camera.fy");
@@ -47,7 +46,6 @@ int main(int argc, char **argv)
 
     std::vector<SE3> poses;
 
-
     for (int i = 0; i < max + 1; i++)
     {
         LOG(INFO) << i << "-th frame";
@@ -55,13 +53,18 @@ int main(int argc, char **argv)
         int n_zero = 0;
         std::string original_string = std::to_string(i);
         std::string dest = std::string(n_zero, '0').append(original_string);
-        cv::Mat img = cv::imread(Config::Get<std::string>("rgb_dir") + std::to_string(i) + ".jpg");
-        cv::Mat gray;
-        cv::cvtColor(img, gray, CV_RGB2GRAY);
+        cv::Mat img = cv::imread(Config::Get<std::string>("rgb_dir") + std::to_string(i) + ".jpg", 1);
+        cv::Mat gray = cv::imread(Config::Get<std::string>("rgb_dir") + std::to_string(i) + ".jpg", 0);
 
         Frame::Ptr frame(new Frame(i, 0, SE3(SO3(), t_1), img, gray, K));
         sfm->AddFrame(frame);
+    }
 
+    sfm->Optimize();
+
+    while (1)
+    {
+        sfm->viewer_->ShowResult();
     }
 
     return 0;

@@ -63,48 +63,46 @@ namespace SFM
         const Mat33 intrinsic_;
     };
 
-    // class ProjectionFactorSimplePinhole
-    // {
-    // public:
-    //     explicit ProjectionFactorSimplePinhole(const Eigen::Vector2d &point2D) : observed_x_(point2D(0)), observed_y_(point2D(1)) {}
+    class ProjectionFactorSimplePinhole
+    {
+    public:
+        explicit ProjectionFactorSimplePinhole(const Vec2 &point2D) : observed_x_(point2D(0)),
+                                                                      observed_y_(point2D(1)) {}
 
-    //     static ceres::CostFunction *Create(const Eigen::Vector2d &point2D)
-    //     {
-    //         return (new ceres::AutoDiffCostFunction<ProjectionFactorSimplePinhole, 2, 4, 3, 3, 3>(new ProjectionFactorSimplePinhole(point2D)));
-    //     }
+        static ceres::CostFunction *Create(const Eigen::Vector2d &point2D)
+        {
+            return (new ceres::AutoDiffCostFunction<ProjectionFactorSimplePinhole, 2, 4, 3, 3, 3>(
+                new ProjectionFactorSimplePinhole(point2D)));
+        }
 
-    //     template <typename T>
-    //     bool operator()(const T *const qvec, const T *const tvec, const T *const point3D, const T *const camera_params, T *residuals) const
-    //     {
-    //         // Rotate and translate.
-    //         T projection[3];
-    //         // R * P + t / w x y z
-    //         ceres::UnitQuaternionRotatePoint(qvec, point3D, projection);
-    //         projection[0] += tvec[0];
-    //         projection[1] += tvec[1];
-    //         projection[2] += tvec[2];
+        template <typename T>
+        bool operator()(const T *const qvec, const T *const tvec, const T *const point3D, const T *const intrinsic, T *residuals) const
+        {
+            // Rotate and translate.
+            T projection[3];
+            // R * P + t / w x y z
+            ceres::QuaternionRotatePoint(qvec, point3D, projection);
+            projection[0] += tvec[0];
+            projection[1] += tvec[1];
+            projection[2] += tvec[2];
 
-    //         // Project to image plane.
-    //         projection[0] /= projection[2];
-    //         projection[1] /= projection[2];
+            // Project to image plane.
+            projection[0] /= projection[2];
+            projection[1] /= projection[2];
 
-    //         // Distort and transform to pixel space.
-    //         // World To Image
+            // No distortion
+            residuals[0] = (intrinsic[0] * projection[0] + intrinsic[1]) - T(observed_x_);
+            residuals[1] = (intrinsic[0] * projection[1] + intrinsic[2]) - T(observed_y_);
 
-    //         T f = camera_params[0];
-    //         T c1 = camera_params[1];
-    //         T c2 = camera_params[2];
+            // std::cerr<<"Check Residual: "<<residuals[0]<<" / "<<residuals[1]<<std::endl;
 
-    //         // No distortion
-    //         residuals[0] = f * projection[0] + c1 - T(observed_x_);
-    //         residuals[1] = f * projection[1] + c2 - T(observed_x_);
+            return true;
+        }
 
-    //         return true;
-    //     }
+    private:
+        const double observed_x_;
+        const double observed_y_;
+    };
 
-    // private:
-    //     const double observed_x_;
-    //     const double observed_y_;
-    // };
 }
 #endif

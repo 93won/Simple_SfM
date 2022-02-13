@@ -17,7 +17,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 include_directories("/usr/include/eigen3")
 
 # OpenCV
-find_package(OpenCV 3.2 REQUIRED)
+find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # pangolin
