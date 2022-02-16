@@ -8,8 +8,8 @@ Dependencies are listed in the table below along with the version used during de
 | OpenCV        | 4.5.5  |
 | Ceres         | 2.0.0  |
 | Sophus        | 1.0.0  |
-| CSparse       |-|
 | Eigen         |3.3.4|
-| Glog          |-|
+| CSparse       |1:5.1.2-2|
+| Glog          |0.3.5-1|
 
 
