@@ -1,4 +1,4 @@
-# RGBD_SLAM
+# Simple Structure from Motion (SfM)
 
 
 ## Dependencies
