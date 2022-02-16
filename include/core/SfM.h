@@ -20,7 +20,6 @@
 
 namespace SFM
 {
-
     class SfM
     {
     public:

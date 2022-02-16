@@ -17,11 +17,11 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 include_directories("/usr/include/eigen3")
 
 # OpenCV
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 4.5.5 REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # pangolin
-find_package(Pangolin REQUIRED)
+find_package(Pangolin 0.5 REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
 
 # Sophus
@@ -29,46 +29,27 @@ find_package(Sophus REQUIRED)
 include_directories(${Sophus_INCLUDE_DIRS})
 
 # Ceres
-find_package(Ceres REQUIRED)
+find_package(Ceres 2.0.0 REQUIRED)
 include_directories(${Ceres_INCLUDE_DIRS})
 
 # glog
 find_package(Glog REQUIRED)
 include_directories(${GLOG_INCLUDE_DIRS})
 
-# gtest
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-
-# gflags
-find_package(GFlags REQUIRED)
-include_directories(${GFLAGS_INCLUDE_DIRS})
-
 # csparse
 find_package(CSparse REQUIRED)
 include_directories(${CSPARSE_INCLUDE_DIR})
-
-# fmt
-find_package(fmt REQUIRED)
-
-# pcl
-find_package(PCL REQUIRED)
-include_directories(${PCL_INCLUDE_DIRS}) 
 
 
 
 # #${Pangolin_LIBRARIES} GL GLU GLEW glut
 set(THIRD_PARTY_LIBS
         ${OpenCV_LIBS}
-        pthread
         ${Sophus_LIBRARIES}
         ${CERES_LIBRARIES}
-        ${GTEST_BOTH_LIBRARIES}
         ${GLOG_LIBRARIES}
-        ${GFLAGS_LIBRARIES}
         ${CSPARSE_LIBRARY}
         Sophus::Sophus
-        ${PCL_LIBRARIES}
         ${Pangolin_LIBRARIES}
         )
 

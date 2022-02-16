@@ -1,1 +1,1 @@
-# Simple Structure from Motion (SfM)
+# RGBD_SLAM
