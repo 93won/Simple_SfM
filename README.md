@@ -9,6 +9,7 @@ Dependencies are listed in the table below along with the version used during de
 | Ceres         | 2.0.0  |
 | Sophus        | 1.0.0  |
 | CSparse       |-|
+| Eigen         |3.3.4|
 | Glog          |-|
 
 
