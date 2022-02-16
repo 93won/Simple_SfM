@@ -10,6 +10,7 @@ Dependencies are listed in the table below along with the version used during de
 | Sophus        | 1.0.0  |
 | Eigen         |3.3.4|
 | CSparse       |5.1.2|
+| Pangolin      |0.5|
 | Glog          |0.3.5|
 
 
