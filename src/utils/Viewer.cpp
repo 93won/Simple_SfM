@@ -1,4 +1,5 @@
 #include "utils/Viewer.h"
+#include "utils/Config.h"
 #include "types/Feature.h"
 #include "types/Frame.h"
 
@@ -6,7 +7,6 @@
 #include <opencv2/opencv.hpp>
 #include <ctime>
 
-#include "Config.h"
 
 namespace SFM
 {
@@ -28,11 +28,9 @@ namespace SFM
         current_frame_ = current_frame;
     }
 
-    
-
     void Viewer::Initialize()
     {
-        pangolin::CreateWindowAndBind("MySLAM", 1024, 768);
+        pangolin::CreateWindowAndBind("SfM", 1024, 768);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -71,7 +69,7 @@ namespace SFM
     void Viewer::DrawFrame(Frame::Ptr frame, const float *color)
     {
         SE3 Twc = frame->Pose().inverse();
-        const float sz = 1.0;
+        const float sz = 0.1;
         const int line_width = 2.0;
 
         glPushMatrix();
@@ -85,7 +83,7 @@ namespace SFM
         }
         else
             glColor3f(color[0], color[1], color[2]);
-
+        
         glLineWidth(line_width);
         glBegin(GL_LINES);
         glVertex3f(0, 0, 0);

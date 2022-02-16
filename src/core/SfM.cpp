@@ -1,5 +1,9 @@
 #include "core/SfM.h"
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 namespace SFM
 {
 
@@ -28,6 +32,9 @@ namespace SFM
         num_features_ = Config::Get<int>("num_features");
         match_save_dir_ = Config::Get<std::string>("match_save_dir");
         match_threshold_ = Config::Get<int>("match_threshold");
+
+        width_ = Config::Get<int>("width");
+        height_ = Config::Get<int>("height");
     }
 
     bool SfM::AddFrame(Frame::Ptr frame)
@@ -69,7 +76,7 @@ namespace SFM
                                      current_frame_->rgb_.at<cv::Vec3b>(kp.pt.y, kp.pt.x)[1] / 1.0,
                                      current_frame_->rgb_.at<cv::Vec3b>(kp.pt.y, kp.pt.x)[0] / 1.0};
 
-            current_frame_->features_.push_back(Feature::Ptr(new Feature(current_frame_, kp, 1.0, rgb_)));
+            current_frame_->features_.push_back(Feature::Ptr(new Feature(cnt_detected, current_frame_, kp, 1.0, rgb_)));
 
             cnt_detected++;
         }
@@ -174,7 +181,7 @@ namespace SFM
             std::vector<cv::DMatch> matches;
             std::vector<cv::KeyPoint> kps1, kps2;
 
-            int num_matches = MatchTwoFrames(kf, matches, kps1, kps2, true, true);
+            int num_matches = MatchTwoFrames(kf, matches, kps1, kps2, true, false);
 
             std::vector<Eigen::Vector3d> pts1, pts2;
             Eigen::Matrix3d K = camera_->K();
@@ -291,13 +298,23 @@ namespace SFM
                 {
                     int frame_id = item->second;
                     Eigen::Vector2d obs_src(ob.lock()->position_.pt.x, ob.lock()->position_.pt.y);
+
                     // ceres::CostFunction *cost_function = ProjectionFactorSimplePinholeConstantIntrinsic::Create(obs_src, K);
                     // problem.AddResidualBlock(cost_function,
                     //                          new ceres::CauchyLoss(0.5),
                     //                          qvec_param[frame_id].data(),
                     //                          tvec_param[frame_id].data(),
                     //                          lm_param[lm_id].data());
-                    ceres::CostFunction *cost_function = ProjectionFactorSimplePinhole::Create(obs_src);
+
+                    // ceres::CostFunction *cost_function = ProjectionFactorSimplePinhole::Create(obs_src);
+                    // problem.AddResidualBlock(cost_function,
+                    //                          new ceres::CauchyLoss(0.5),
+                    //                          qvec_param[frame_id].data(),
+                    //                          tvec_param[frame_id].data(),
+                    //                          lm_param[lm_id].data(),
+                    //                          intrinsic_param[0].data());
+
+                    ceres::CostFunction *cost_function = ProjectionFactorSimplePinholeCenterConstraints::Create(obs_src, width_, height_);
                     problem.AddResidualBlock(cost_function,
                                              new ceres::CauchyLoss(0.5),
                                              qvec_param[frame_id].data(),
@@ -308,20 +325,7 @@ namespace SFM
             }
         }
 
-        // for (int i = 0; i < window_size_temp; i++)
-        // {
-        //     problem.SetParameterBlockConstant(qvec_param[i].data());
-        //     problem.SetParameterBlockConstant(tvec_param[i].data());
-        // }
-
-        // for (int i = 0; i < (int)map_->active_landmarks_.size(); i++)
-        // {
-        //     problem.SetParameterBlockConstant(lm_param[i].data());
-        // }
-
-        // Solve optimization problem
-
-        LOG(INFO) <<"Intrinsic before update(f, cx, cy): "<<intrinsic_param[0][0]<<", "<<intrinsic_param[0][1]<<", "<<intrinsic_param[0][2];
+        LOG(INFO) << "Intrinsic before update(f, cx, cy): " << intrinsic_param[0][0] << ", " << intrinsic_param[0][1] << ", " << intrinsic_param[0][2];
         ceres::Solver::Options options;
         options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
         options.minimizer_progress_to_stdout = false;
@@ -333,7 +337,7 @@ namespace SFM
         ceres::Solve(options, &problem, &summary);
         std::cout << summary.BriefReport() << "\n";
 
-        LOG(INFO) <<"Intrinsic after update(f, cx, cy): "<<intrinsic_param[0][0]<<", "<<intrinsic_param[0][1]<<", "<<intrinsic_param[0][2];
+        LOG(INFO) << "Intrinsic after update(f, cx, cy): " << intrinsic_param[0][0] << ", " << intrinsic_param[0][1] << ", " << intrinsic_param[0][2];
         // Update params
         for (auto &kf_map : map_->keyframes_)
         {
@@ -357,6 +361,116 @@ namespace SFM
         {
             int lm_id = idx2idx_lm.find(mp.second->id_)->second;
             mp.second->pos_ = lm_param[lm_id];
+        }
+
+        // Write txt file
+
+        // cameras.txt
+        std::ofstream ofile("/home/seungwon/cameras.txt");
+        if (ofile.is_open())
+        {
+            ofile << "# Camera list with one line of data per camera:\n";
+            ofile << "#   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]\n";
+            ofile << "# Number of cameras: 1\n";
+            std::string str = "1 SIMPLE_RADIAL " +
+                              std::to_string(width_) + " " +
+                              std::to_string(height_) + " " +
+                              std::to_string(intrinsic_param[0][0]) + " " +
+                              std::to_string(intrinsic_param[0][1]) + " " +
+                              std::to_string(intrinsic_param[0][2]) + " 0.0\n";
+            ofile << str;
+            ofile.close();
+        }
+
+        // points3D.txt
+        std::ofstream ofile2("/home/seungwon/points3D.txt");
+        if (ofile2.is_open())
+        {
+            ofile2 << "# 3D point list with one line of data per point:\n";
+            ofile2 << "#   POINT3D_ID, X, Y, Z, R, G, B, ERROR, TRACK[] as (IMAGE_ID, POINT2D_IDX)\n";
+            ofile2 << "# Number of points: " + std::to_string((int)map_->landmarks_.size()) + ", mean track length: 0.0\n";
+
+            for (auto &mp : map_->landmarks_)
+            {
+                int id = mp.second->id_;
+                Vec3 position = mp.second->Pos();
+                std::vector<double> rgb = mp.second->rgb_;
+                std::string data = std::to_string(id) + " " +
+                                   std::to_string(position[0]) + " " +
+                                   std::to_string(position[1]) + " " +
+                                   std::to_string(position[2]) + " " +
+                                   std::to_string((int)rgb[0]) + " " +
+                                   std::to_string((int)rgb[1]) + " " +
+                                   std::to_string((int)rgb[2]) + " 0";
+
+                for (auto &ob_ptr : mp.second->observations_)
+                {
+                                                                                                                    
+                    auto ob = ob_ptr.lock();
+
+                    if (ob)
+                        data += (" " + std::to_string(ob->frame_.lock()->id_) + " " + std::to_string(ob->id_));
+                }
+
+                data += "\n";
+
+                ofile2 << data;
+            }
+            ofile2.close();
+        }
+
+        // images.txt
+        std::ofstream ofile3("/home/seungwon/images.txt");
+
+        int cnt = 1;
+        if (ofile3.is_open())
+        {
+            ofile3 << "# Image list with two lines of data per image:\n";
+            ofile3 << "#   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME\n";
+            ofile3 << "#   POINTS2D[] as (X, Y, POINT3D_ID)\n";
+            ofile3 << ("# Number of images: " + std::to_string(map_->keyframes_.size()) + ", mean observations per image: 2000" + "\n");
+
+            for (auto &kf_map : map_->keyframes_)
+            {
+                std::string data;
+                std::string kf_id = std::to_string(kf_map.second->id_);
+                std::string kf_name = kf_id + ".jpg";
+
+                SE3 pose_ = kf_map.second->Pose();
+                Eigen::Quaterniond q_eigen(pose_.rotationMatrix());
+                q_eigen.normalize();
+                Vec4 q = Vec4(q_eigen.w(), q_eigen.x(), q_eigen.y(), q_eigen.z());
+                Vec3 t = pose_.translation();
+                std::string q_str = std::to_string(q[0]) + " " + std::to_string(q[1]) + " " + std::to_string(q[2]) + " " + std::to_string(q[3]) + " ";
+                std::string t_str = std::to_string(t[0]) + " " + std::to_string(t[1]) + " " + std::to_string(t[2]) + " ";
+                data = std::to_string(cnt) + " " + q_str + t_str + std::to_string(1) + " " + kf_name + "\n";
+                ofile3 << data;
+
+                auto kf = kf_map.second;
+                std::string data2;
+                int cc = 0;
+                for (auto feature_ptr : kf->features_)
+                {
+                    if (cc > 0)
+                        data2 += " ";
+                    std::string x_str = std::to_string(feature_ptr->position_.pt.x);
+                    std::string y_str = std::to_string(feature_ptr->position_.pt.y);
+                    auto mp = feature_ptr->map_point_.lock();
+                    std::string temp;
+                    if (mp)
+                        temp = std::to_string(mp->id_);
+                    else
+                        temp = "-1";
+
+                    data2 += (x_str + " " + y_str + " " + temp);
+                    cc += 1;
+                }
+
+                data2 += "\n";
+                ofile3 << data2;
+                cnt += 1;
+            }
+            ofile3.close();
         }
     }
 

@@ -104,5 +104,52 @@ namespace SFM
         const double observed_y_;
     };
 
+    class ProjectionFactorSimplePinholeCenterConstraints
+    {
+    public:
+        explicit ProjectionFactorSimplePinholeCenterConstraints(const Vec2 &point2D, const int width, const int height) : observed_x_(point2D(0)),
+                                                                                                                          observed_y_(point2D(1)),
+                                                                                                                          width_(width),
+                                                                                                                          height_(height) {}
+
+        static ceres::CostFunction *Create(const Eigen::Vector2d &point2D, const int width, const int height)
+        {
+            return (new ceres::AutoDiffCostFunction<ProjectionFactorSimplePinholeCenterConstraints, 4, 4, 3, 3, 3>(
+                new ProjectionFactorSimplePinholeCenterConstraints(point2D, width, height)));
+        }
+
+        template <typename T>
+        bool operator()(const T *const qvec, const T *const tvec, const T *const point3D, const T *const intrinsic, T *residuals) const
+        {
+            // Rotate and translate.
+            T projection[3];
+            // R * P + t / w x y z
+            ceres::QuaternionRotatePoint(qvec, point3D, projection);
+            projection[0] += tvec[0];
+            projection[1] += tvec[1];
+            projection[2] += tvec[2];
+
+            // Project to image plane.
+            projection[0] /= projection[2];
+            projection[1] /= projection[2];
+
+            // No distortion
+            residuals[0] = (intrinsic[0] * projection[0] + intrinsic[1]) - T(observed_x_);
+            residuals[1] = (intrinsic[0] * projection[1] + intrinsic[2]) - T(observed_y_);
+            residuals[2] = intrinsic[1] - T(((double)width_) / 2.0);  // cx constrait
+            residuals[3] = intrinsic[2] - T(((double)height_) / 2.0); // cy constrait
+
+            // std::cerr<<"Check Residual: "<<residuals[0]<<" / "<<residuals[1]<<std::endl;
+
+            return true;
+        }
+
+    private:
+        const double observed_x_;
+        const double observed_y_;
+        const int width_;
+        const int height_;
+    };
+
 }
 #endif

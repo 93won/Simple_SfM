@@ -18,6 +18,7 @@ namespace SFM
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         typedef std::shared_ptr<Feature> Ptr;
         std::weak_ptr<Frame> frame_;
+        int id_;
         cv::KeyPoint position_;
         std::vector<double> rgb_;
         double depth_ = 1.0;
@@ -25,10 +26,10 @@ namespace SFM
         bool is_outlier_ = false;
 
         Feature() {}
-
         Feature(std::shared_ptr<Frame> frame, const cv::KeyPoint &kp, double depth) : frame_(frame), position_(kp), depth_(depth) {}
-
         Feature(std::shared_ptr<Frame> frame, const cv::KeyPoint &kp, double depth, std::vector<double> rgb) : frame_(frame), position_(kp), depth_(depth), rgb_(rgb) {}
+        Feature(int id, std::shared_ptr<Frame> frame, const cv::KeyPoint &kp, double depth, std::vector<double> rgb) : id_(id), frame_(frame), position_(kp), depth_(depth), rgb_(rgb) {}
+
     };
 
 }

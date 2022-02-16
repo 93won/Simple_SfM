@@ -51,8 +51,11 @@ include_directories(${CSPARSE_INCLUDE_DIR})
 # fmt
 find_package(fmt REQUIRED)
 
+# pcl
 find_package(PCL REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS}) 
+
+
 
 # #${Pangolin_LIBRARIES} GL GLU GLEW glut
 set(THIRD_PARTY_LIBS

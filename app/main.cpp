@@ -7,8 +7,8 @@
 #include <pangolin/pangolin.h>
 #include <pcl/io/pcd_io.h>
 #include "utils/Viewer.h"
+#include "utils/Config.h"
 #include "core/SfM.h"
-#include "Config.h"
 
 #include <pangolin/pangolin.h>
 

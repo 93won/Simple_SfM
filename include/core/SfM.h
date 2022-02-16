@@ -10,13 +10,13 @@
 #include <sophus/local_parameterization_se3.hpp>
 #include <ctime>
 
-#include "Config.h"
 #include "types/Feature.h"
-#include "factor/Factor.h"
 #include "types/Common.h"
 #include "types/Frame.h"
 #include "types/Map.h"
 #include "utils/Viewer.h"
+#include "utils/Config.h"
+#include "factor/Factor.h"
 
 namespace SFM
 {
@@ -71,6 +71,10 @@ namespace SFM
         // params
         int num_features_ = 200;
         int match_threshold_ = 50;
+
+        // image
+        int width_ = 0;
+        int height_ = 0;
 
         // utilities
         cv::Ptr<cv::FeatureDetector> detector_;       // feature detector in opencv

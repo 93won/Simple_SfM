@@ -4,7 +4,7 @@
 
 #include "types/Frame.h"
 #include "types/MapPoint.h"
-#include "Config.h"
+#include "utils/Config.h"
 
 namespace SFM
 {
