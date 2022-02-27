@@ -6,11 +6,11 @@ match_save_dir: /home/seungwon/3DII/Fusion_o3d/data_o3d/match/
 # camera intrinsics
 camera.fx: 4786.9338649532028
 camera.fy: 4786.9338649532028
-camera.cx: 746.0
-camera.cy: 995.0
+camera.cx: 750.0
+camera.cy: 1000.0
 
-height: 1990
-width: 1492
+height: 2000
+width: 1500
 
 # feature
 feature_type: SIFT

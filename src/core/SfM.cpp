@@ -405,7 +405,7 @@ namespace SFM
 
                 for (auto &ob_ptr : mp.second->observations_)
                 {
-                                                                                                                    
+
                     auto ob = ob_ptr.lock();
 
                     if (ob)
@@ -437,6 +437,8 @@ namespace SFM
                 std::string kf_name = kf_id + ".jpg";
 
                 SE3 pose_ = kf_map.second->Pose();
+
+                LOG(INFO) << pose_.translation();
                 Eigen::Quaterniond q_eigen(pose_.rotationMatrix());
                 q_eigen.normalize();
                 Vec4 q = Vec4(q_eigen.w(), q_eigen.x(), q_eigen.y(), q_eigen.z());
